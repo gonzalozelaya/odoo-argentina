@@ -423,6 +423,7 @@ msgstr "Mensaje de error en retencion"
 msgid "Withholding computation"
 msgstr "Cálculo de Retención"
 
+
 #. module: l10n_ar_withholding_ux
 #: model:ir.model.fields,field_description:l10n_ar_withholding_ux.field_account_payment__l10n_ar_withholding_line_ids
 msgid "Withholdings Lines"
