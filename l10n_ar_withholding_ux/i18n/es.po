@@ -22,34 +22,34 @@ msgstr ""
 #. module: l10n_ar_withholding_ux
 #: model_terms:ir.ui.view,arch_db:l10n_ar_withholding_ux.view_account_tax_search
 msgid "AR Customer Withholding"
-msgstr ""
+msgstr "Retencion de cliente"
 
 #. module: l10n_ar_withholding_ux
 #: model_terms:ir.ui.view,arch_db:l10n_ar_withholding_ux.view_account_tax_search
 msgid "AR Supplier Withholding"
-msgstr ""
+msgstr "Retencion de Proveedor"
 
 #. module: l10n_ar_withholding_ux
 #: model:ir.actions.act_window,name:l10n_ar_withholding_ux.action_withholding_tax_form
 #: model:ir.ui.menu,name:l10n_ar_withholding_ux.menu_withholding_tax_form
 msgid "AR Withholding Taxes"
-msgstr ""
+msgstr "Impuestos de Retenciones"
 
 #. module: l10n_ar_withholding_ux
 #: model:ir.model.fields,field_description:l10n_ar_withholding_ux.field_l10n_ar_payment_withholding__accumulated_amount
 msgid "Accumulated Amount"
-msgstr ""
+msgstr "Monto acumulado"
 
 #. module: l10n_ar_withholding_ux
 #: model:ir.model.fields,field_description:l10n_ar_withholding_ux.field_account_tax__withholding_accumulated_payments
 #: model:ir.model.fields,field_description:l10n_ar_withholding_ux.field_l10n_ar_payment_withholding__withholding_accumulated_payments
 msgid "Accumulated Payments"
-msgstr ""
+msgstr "Pagos acumulados"
 
 #. module: l10n_ar_withholding_ux
 #: model:ir.model.fields,field_description:l10n_ar_withholding_ux.field_account_payment__withholdable_advanced_amount
 msgid "Adjustment / Advance (untaxed)"
-msgstr ""
+msgstr "Ajustes / Avances (sin impuesto)"
 
 #. module: l10n_ar_withholding_ux
 #: model:ir.model.fields,field_description:l10n_ar_withholding_ux.field_account_tax__withholding_advances
