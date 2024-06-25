@@ -421,7 +421,7 @@ msgstr ""
 #. module: l10n_ar_withholding_ux
 #: model_terms:ir.ui.view,arch_db:l10n_ar_withholding_ux.view_tax_form
 msgid "Withholding computation"
-msgstr ""
+msgstr "Cálculo de retención"
 
 #. module: l10n_ar_withholding_ux
 #: model:ir.model.fields,field_description:l10n_ar_withholding_ux.field_account_payment__l10n_ar_withholding_line_ids
