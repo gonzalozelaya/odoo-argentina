@@ -127,25 +127,29 @@ result = withholdable_base_amount * 0.10
         from_date = to_date + from_relative_delta
 
         previous_payments_domain = [
-            ('partner_id.commercial_partner_id', '=', payment.commercial_partner_id.id),
+            ('partner_id.commercial_partner_id', '=', payment.partner_id.commercial_partner_id.id),
             ('date', '<=', to_date),
             ('date', '>=', from_date),
             ('state', 'not in', ['draft', 'cancel', 'confirmed']),
-            ('id', '!=', payment.id),
             ('company_id', '=', payment.company_id.id),
         ]
+
         # for compatibility with public_budget we check state not in and not
         # state in posted. Just in case someone implements payments cancelled
         # on posted payment group, we remove the cancel payments (not the
         # draft ones as they are also considered by public_budget)
         previous_withholdings_domain = [
-            ('payment_id.partner_id.commercial_partner_id', '=', payment.commercial_partner_id.id),
+            ('payment_id.partner_id.commercial_partner_id', '=', payment.partner_id.commercial_partner_id.id),
             ('payment_id.date', '<=', to_date),
             ('payment_id.date', '>=', from_date),
             ('payment_id.state', '=', 'posted'),
             ('tax_id', '=', self.id),
-            ('payment_id.id', '!=', payment.id),
         ]
+
+        if not isinstance(payment.id, models.NewId):
+            previous_payments_domain.append(('id', '!=', payment.id))
+            previous_withholdings_domain.append(('payment_id.id', '!=', payment.id))
+
         return (previous_payments_domain, previous_withholdings_domain)
 
     def get_withholding_vals(self, payment, force_withholding_amount_type=None):

@@ -26,6 +26,38 @@ class AccountPayment(models.Model):
         'afip.tabla_ganancias.alicuotasymontos',
         compute='_company_regimenes_ganancias',
     )
+    need_withholding_recompute = fields.Boolean(
+        compute="_compute_need_withholding_recompute",
+        store=True,
+        readonly=False
+    )
+
+    @api.depends('withholdable_advanced_amount', 'regimen_ganancias_id', 'retencion_ganancias', 'date', 'unreconciled_amount', 'to_pay_move_line_ids')
+    def _compute_need_withholding_recompute(self):
+        self.need_withholding_recompute = True
+
+    def compute_withholdings(self):
+        super()._compute_withholdings()
+        self.need_withholding_recompute = False
+
+    # estaria bueno re-incorporarlo pero para hacerlo:
+    # a) tenemos que ver que cuando creamos pago desde factura ya viaje la retencion de ganancias o convertirlas en campos calculados con pre compute?
+    # el tema es que no termina computando regimen de ganancias porque en "regimen = payment.regimen_ganancias_id" llega vacio
+    # b) ademas deberiamos mejorar logica de need_withholding_recompute porque al guardar se está pisando como que requiere recomputo
+    # @api.onchange('to_pay_amount', 'withholdable_advanced_amount', 'partner_id', 'regimen_ganancias_id', 'retencion_ganancias', 'date')
+    # def _onchange_to_pay_amount(self):
+    #     # para muchas retenciones es necesario que el partner este seteado, solo calculamos si viene definido
+    #     for rec in self.filtered('partner_id'):
+    #         # el compute_withholdings o el _compute_withholdings?
+    #         rec._compute_withholdings()
+    #         # rec.force_amount_company_currency += rec.payment_difference
+    #         # rec.unreconciled_amount = rec.to_pay_amount - rec.selected_debt
+
+    # ver mensaje en commit
+    # @api.onchange('retencion_ganancias', 'regimen_ganancias_id')
+    # def _onchange_ganancias(self):
+    #     # si cambian parametros de ganancias recomputamos retenciones tmb
+    #     self._onchange_to_pay_amount()
 
     @api.depends('company_id.regimenes_ganancias_ids')
     def _company_regimenes_ganancias(self):
@@ -42,15 +74,15 @@ class AccountPayment(models.Model):
     @api.onchange('commercial_partner_id')
     def change_retencion_ganancias(self):
         # si es exento en ganancias o no tiene clasificacion pero es monotributista, del exterior o consumidor final, sugerimos regimen no_aplica
-        if self.commercial_partner_id.imp_ganancias_padron in ['EX', 'NC'] or (
-            not self.commercial_partner_id.imp_ganancias_padron and
-            self.commercial_partner_id.l10n_ar_afip_responsibility_type_id.code in ('5', '6', '9', '13')):
+        if self.partner_id.commercial_partner_id.imp_ganancias_padron in ['EX', 'NC'] or (
+            not self.partner_id.commercial_partner_id.imp_ganancias_padron and
+            self.partner_id.commercial_partner_id.l10n_ar_afip_responsibility_type_id.code in ('5', '6', '9', '13')):
             self.retencion_ganancias = 'no_aplica'
             self.regimen_ganancias_id = False
         else:
             cia_regs = self.company_regimenes_ganancias_ids
             partner_regimen = (
-                self.commercial_partner_id.default_regimen_ganancias_id)
+                self.partner_id.commercial_partner_id.default_regimen_ganancias_id)
             if partner_regimen:
                 def_regimen = partner_regimen
             elif cia_regs:
@@ -62,9 +94,9 @@ class AccountPayment(models.Model):
     @api.onchange('company_regimenes_ganancias_ids')
     def change_company_regimenes_ganancias(self):
         # partner_type == 'supplier' ya lo filtra el company_regimenes_ga...
-        if self.commercial_partner_id.imp_ganancias_padron in ['EX', 'NC'] or (
-            not self.commercial_partner_id.imp_ganancias_padron and
-            self.commercial_partner_id.l10n_ar_afip_responsibility_type_id.code in ('5', '6', '9', '13')):
+        if self.partner_id.commercial_partner_id.imp_ganancias_padron in ['EX', 'NC'] or (
+            not self.partner_id.commercial_partner_id.imp_ganancias_padron and
+            self.partner_id.commercial_partner_id.l10n_ar_afip_responsibility_type_id.code in ('5', '6', '9', '13')):
             self.retencion_ganancias = 'no_aplica'
             self.regimen_ganancias_id = False
         elif self.company_regimenes_ganancias_ids:

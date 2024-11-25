@@ -6,18 +6,19 @@
         <field name="model">account.payment</field>
         <field name="inherit_id" ref="l10n_latam_check.view_account_payment_form_inherited" />
         <field name="arch" type="xml">
-            <field name="l10n_latam_check_id" position="before">
-                <field name="l10n_ar_partner_vat" invisible="state != 'draft' or not l10n_ar_partner_vat or (not show_partner_bank_account and payment_method_code not in ['out_third_party_checks', 'new_third_party_checks', 'check_printing'])"/>
+            <field name="partner_id" position="after">
+                <!-- mostramos cuit cuando estamos haciendo transferencia o pagando con cheque ya que es util tenerlo a mano para hacer la transacción en el banco -->
+                <field name="l10n_ar_partner_vat" invisible="state != 'draft' or not l10n_ar_partner_vat or is_internal_transfer or (not show_partner_bank_account and payment_method_code not in ['out_third_party_checks', 'own_checks'])"/>
             </field>
         </field>
     </record>
 
     <!-- TODO esto deberia ir a un modulo l10n_latam_check_ux. Pero como principalmente lo usamos para ARG por ahora mantenemos aca (no lo queremos en account_ux porque no todos los clientes usan account_ux) -->
     <record model="ir.ui.menu" id="l10n_latam_check.menu_own_check">
-        <field name="parent_id" ref="account_ux.menu_finance_bank_and_cash"/>
+        <field name="parent_id" ref="account_internal_transfer.menu_finance_bank_and_cash"/>
     </record>
     <record model="ir.ui.menu" id="l10n_latam_check.menu_third_party_check">
-        <field name="parent_id" ref="account_ux.menu_finance_bank_and_cash"/>
+        <field name="parent_id" ref="account_internal_transfer.menu_finance_bank_and_cash"/>
     </record>
 
 </odoo>

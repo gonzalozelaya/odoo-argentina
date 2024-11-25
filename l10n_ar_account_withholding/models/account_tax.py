@@ -50,7 +50,7 @@ class AccountTax(models.Model):
             previous_withholdings_domain)
 
     def get_withholding_vals(self, payment):
-        commercial_partner = payment.commercial_partner_id
+        commercial_partner = payment.partner_id.commercial_partner_id
 
         force_withholding_amount_type = None
         if self.withholding_type == 'partner_tax':
@@ -248,12 +248,7 @@ class AccountTax(models.Model):
     def _compute_amount(
             self, base_amount, price_unit, quantity=1.0, product=None, partner=None, fixed_multiplicator=1):
         if self.amount_type == 'partner_tax':
-            date = self._context.get('invoice_date', fields.Date.context_today(self))
-
-            # Parche para intentar que al intentar corregir el problema que surge al intentar consultar la alicuota
-            # para la fecha que estamos usando para forzar la actualizacion de la cotizacion
-            if not date or str(date) == '1970-01-01':
-                date = fields.Date.context_today(self)
+            date = self._context.get('invoice_date') or fields.Date.context_today(self)
             partner = partner and partner.sudo()
             return base_amount * self.sudo().get_partner_alicuota_percepcion(partner, date)
         else:
