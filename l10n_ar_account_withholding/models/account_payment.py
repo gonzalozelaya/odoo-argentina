@@ -43,7 +43,6 @@ class AccountPayment(models.Model):
     @api.onchange('partner_id')
     def change_retencion_ganancias(self):
         # si es exento en ganancias o no tiene clasificacion pero es monotributista, del exterior o consumidor final, sugerimos regimen no_aplica
-        _logger.info('Entrando a change_retencion_ganancias')
         if self.partner_id.imp_ganancias_padron in ['EX', 'NC'] or (
             not self.partner_id.imp_ganancias_padron and
             self.partner_id.l10n_ar_afip_responsibility_type_id.code in ('5', '6', '9', '13')):

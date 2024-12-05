@@ -9,7 +9,6 @@ class SaleOrderLine(models.Model):
     @api.onchange('product_id')
     def on_change_tax(self):
         for line in self:
-            _logger.info('on change sale order line')
             
             # Asegúrate de que partner_id y perceptions estén disponibles
             partner = line.order_id.partner_id
@@ -19,5 +18,3 @@ class SaleOrderLine(models.Model):
                 impuestos_agregar = line.tax_id | impuestos
                 # Asignar directamente
                 line.tax_id = [(6, 0, impuestos_agregar.ids)]
-            else:
-                _logger.warning('El campo order_id.partner_id está vacío o perceptions no está definido.')
