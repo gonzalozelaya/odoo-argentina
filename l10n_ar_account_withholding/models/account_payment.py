@@ -3,8 +3,9 @@
 # directory
 ##############################################################################
 from odoo import models, api, fields
+import logging
 
-
+_logger = logging.getLogger(__name__)
 class AccountPayment(models.Model):
 
     _inherit = "account.payment"
@@ -39,18 +40,18 @@ class AccountPayment(models.Model):
             else:
                 rec.company_regimenes_ganancias_ids = rec.env['afip.tabla_ganancias.alicuotasymontos']
 
-    @api.onchange('commercial_partner_id')
+    @api.onchange('partner_id')
     def change_retencion_ganancias(self):
         # si es exento en ganancias o no tiene clasificacion pero es monotributista, del exterior o consumidor final, sugerimos regimen no_aplica
-        if self.commercial_partner_id.imp_ganancias_padron in ['EX', 'NC'] or (
-            not self.commercial_partner_id.imp_ganancias_padron and
-            self.commercial_partner_id.l10n_ar_afip_responsibility_type_id.code in ('5', '6', '9', '13')):
+        if self.partner_id.imp_ganancias_padron in ['EX', 'NC'] or (
+            not self.partner_id.imp_ganancias_padron and
+            self.partner_id.l10n_ar_afip_responsibility_type_id.code in ('5', '6', '9', '13')):
             self.retencion_ganancias = 'no_aplica'
             self.regimen_ganancias_id = False
         else:
             cia_regs = self.company_regimenes_ganancias_ids
             partner_regimen = (
-                self.commercial_partner_id.default_regimen_ganancias_id)
+                self.partner_id.default_regimen_ganancias_id)
             if partner_regimen:
                 def_regimen = partner_regimen
             elif cia_regs:

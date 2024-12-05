@@ -27,7 +27,23 @@ class ResPartner(models.Model):
         'afip.tabla_ganancias.alicuotasymontos',
         'Regimen Ganancias por Defecto',
     )
-
+    other_witholdings = fields.Many2many(
+        'account.tax',
+        'res_partner_other_withholdings_rel',  # Nombre de la tabla relacional
+        'partner_id',                         # Campo de referencia al modelo actual
+        'tax_id',                             # Campo de referencia al modelo relacionado
+        string='Retenciones Municipales',
+        domain=[("withholding_type", "=", "based_on_rule")]
+    )
+    perceptions = fields.Many2many(
+        'account.tax',
+        'res_partner_perceptions_rel',       # Nombre de la tabla relacional
+        'partner_id',                        # Campo de referencia al modelo actual
+        'tax_id',                            # Campo de referencia al modelo relacionado
+        string='Percepciones',
+        domain=[("type_tax_use", "=", "sale")]
+    )
+    
 
 class ResPartnerArbaAlicuot(models.Model):
     # TODO rename model to res.partner.tax or similar

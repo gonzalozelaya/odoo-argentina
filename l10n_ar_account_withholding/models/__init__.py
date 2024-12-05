@@ -11,3 +11,4 @@ from . import account_payment
 from . import res_partner
 from . import mail_compose_message
 from . import res_company_jurisdiction_padron
+from . import sale_order_line

@@ -9,12 +9,12 @@
             <field name="imp_ganancias_padron" position="after">
                 <field name="default_regimen_ganancias_id" invisible="imp_ganancias_padron in ['EX', 'NC']"/>
             </field>
+            <field name="impuestos_padron" position="after">
+                <field name="perceptions" widget="many2many_tags"/>
+                <field name="other_witholdings" widget="many2many_tags"/>
+            </field>
             <group name="others_col_1">
                 <field name="drei"/>
-            </group>
-            <group name="others" position="after">
-                <label for="arba_alicuot_ids"/>
-                <field name="arba_alicuot_ids"/>
             </group>
         </field>
     </record>
