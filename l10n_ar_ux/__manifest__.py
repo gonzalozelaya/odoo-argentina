@@ -33,6 +33,7 @@
         'security/ir.model.access.csv',
         'security/l10n_ar_ux_security.xml',
         'data/res_groups_data.xml',
+        'data/disable_custom_header.xml',
         'views/account_fiscal_position_view.xml'
     ],
     'demo': [
