@@ -9,9 +9,9 @@
             <button name="action_post" position="after">
                 <button name="compute_withholdings" string="Compute Withholdings" type="object" invisible="is_internal_transfer or partner_type != 'supplier' or state not in ['draft']"/>
             </button>
-            <field name="unreconciled_amount" position="after">
+            <!--<field name="unreconciled_amount" position="after">
                 <field name="withholdable_advanced_amount" invisible="state not in ['draft'] or partner_type != 'supplier'" readonly="state not in ['draft']"/>
-            </field>
+            </field>-->
             <!-- sacamos grupo con retenciones nativas y creamos una nueva page -->
             <group invisible="country_code != 'AR'" position="replace"/>
             <notebook position="inside">
