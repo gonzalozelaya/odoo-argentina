@@ -2,7 +2,9 @@ from ast import literal_eval
 
 from odoo import models, fields, api, Command, _
 from odoo.exceptions import UserError, ValidationError
+import logging
 
+_logger = logging.getLogger(__name__)
 
 class AccountPayment(models.Model):
 
@@ -17,16 +19,26 @@ class AccountPayment(models.Model):
         return {
             'currency_id': self.currency_id.id,
         }
-
+    @api.depends(
+        'selected_debt', 'unreconciled_amount')
+    def _compute_to_pay_amount(self):
+        for rec in self:
+            rec.to_pay_amount = rec.selected_debt
     def _get_payment_difference(self):
-        payment_difference = super()._get_payment_difference() - sum(self.l10n_ar_withholding_line_ids.mapped('amount'))
+        wth_amount = sum(self.l10n_ar_withholding_line_ids.mapped('amount'))
+        if self.currency_id != self.company_currency_id:
+            wth_amount = wth_amount * self.exchange_rate
+        payment_difference = super()._get_payment_difference() - wth_amount
         return payment_difference
 
     @api.depends('l10n_ar_withholding_line_ids.amount')
     def _compute_payment_total(self):
         super()._compute_payment_total()
         for rec in self:
-            rec.payment_total += sum(rec.l10n_ar_withholding_line_ids.mapped('amount'))
+            wth_amount = sum(self.l10n_ar_withholding_line_ids.mapped('amount'))
+            if self.currency_id != self.company_currency_id:
+                wth_amount = wth_amount * self.exchange_rate
+            rec.payment_total += wth_amount
 
     # Por ahora no compuamos para no pisar cosas que pueda haber moficiado el usuario. Ademas que ya era así (manual)
     # en version anterior
@@ -69,12 +81,16 @@ class AccountPayment(models.Model):
             # de la cia, por lo cual el line.amount aca representa eso y tenemos que convertirlo para el amount_currency
             account_id, tax_repartition_line_id = line._tax_compute_all_helper()
             amount_currency = self.currency_id.round(line.amount / conversion_rate)
+            line_amount = line.amount
+            if self.currency_id != self.company_currency_id:
+                amount_currency = line.amount
+                line_amount = line.amount * conversion_rate
             write_off_line_vals.append({
                     **self._get_withholding_move_line_default_values(),
                     'name': line.name,
                     'account_id': account_id,
                     'amount_currency': sign * amount_currency,
-                    'balance': sign * line.amount,
+                    'balance': sign * line_amount,
                     # este campo no existe mas
                     # 'tax_base_amount': sign * line.base_amount,
                     'tax_repartition_line_id': tax_repartition_line_id,
@@ -86,6 +102,10 @@ class AccountPayment(models.Model):
             account_id = self.company_id.l10n_ar_tax_base_account_id.id
             base_amount = sign * base_amount
             base_amount_currency = self.currency_id.round(base_amount / conversion_rate)
+            if self.currency_id != self.company_currency_id:
+                base = base_amount
+                base_amount = base * conversion_rate
+                base_amount_currency = base
             write_off_line_vals.append({
                 **self._get_withholding_move_line_default_values(),
                 'name': _('Base Ret: ') + nice_base_label,
@@ -127,12 +147,16 @@ class AccountPayment(models.Model):
         res = super()._prepare_move_line_default_vals(write_off_line_vals, force_balance=force_balance)
         res += self._prepare_witholding_write_off_vals()
         wth_amount = sum(self.l10n_ar_withholding_line_ids.mapped('amount'))
+        wth_amount_currency = wth_amount
+        if self.currency_id != self.company_currency_id:
+            wth_amount = wth_amount * self.exchange_rate
         # TODO: EVALUAR
         # si cambio el valor de la cuenta de liquides quitando las retenciones el campo amount representa el monto que cancelo de la deuda
         # si cambio la cuenta de contraparte (agregando retenciones) el campo amount representa el monto neto que abono al partner
         # Ambos caminos funcionan pero no se cual es mejor a nivel usabilidad. depende como realizemos el calculo automatico de la ret
         # liquidity_accounts = [x.id for x in self._get_valid_liquidity_accounts() if x]
         valid_account_types = self._get_valid_payment_account_types()
+        _logger.info(f'Preparing withholdings: {wth_amount}')
 
         for line in res:
             account_id = self.env['account.account'].browse(line['account_id'])
@@ -140,10 +164,10 @@ class AccountPayment(models.Model):
             if account_id.account_type in valid_account_types:
                 if self.payment_type == 'inbound':
                     line['credit'] += wth_amount
-                    line['amount_currency'] -= wth_amount
+                    line['amount_currency'] -= wth_amount_currency
                 elif self.payment_type == 'outbound':
                     line['debit'] += wth_amount
-                    line['amount_currency'] += wth_amount
+                    line['amount_currency'] += wth_amount_currency
         return res
 
     ###################################################
@@ -214,8 +238,12 @@ class AccountPayment(models.Model):
     )
     def _compute_withholdings_amount(self):
         for rec in self:
-            rec.withholdings_amount = sum(
-                rec.payment_ids.filtered(lambda x: x.tax_withholding_id).mapped('amount'))
+            sum = sum(
+                    rec.payment_ids.filtered(lambda x: x.tax_withholding_id).mapped('amount'))
+            if rec.currency_id == rec.company_currency_id: 
+                rec.withholdings_amount = sum
+            else:
+                rec.withholdings_amount = sum * rec.exchange_rate
 
     def _compute_withholdings(self):
         # chequeamos lineas a pagar antes de computar impuestos para evitar trabajar sobre base erronea
@@ -297,7 +325,7 @@ class AccountPayment(models.Model):
 
             # we set computed_withholding_amount, hacemos round porque
             # si no puede pasarse un valor con mas decimales del que se ve
-            # y terminar dando error en el asiento por debitos y creditos no
+            # y terminar dando error en el asiento por debitos y creditos nocompute_withholdings
             # son iguales, algo parecido hace odoo en el compute_all de taxes
             currency = self.currency_id
             period_withholding_amount = currency.round(vals.get('period_withholding_amount', 0.0))

@@ -8,7 +8,7 @@ class l10nArPaymentRegisterWithholding(models.Model):
 
     payment_id = fields.Many2one('account.payment', required=True, ondelete='cascade')
     company_id = fields.Many2one(related='payment_id.company_id')
-    currency_id = fields.Many2one(related='payment_id.company_currency_id')
+    currency_id = fields.Many2one(related='payment_id.currency_id')
     name = fields.Char(string='Number')
     ref = fields.Char()
     tax_id = fields.Many2one('account.tax', check_company=True, required=True)
