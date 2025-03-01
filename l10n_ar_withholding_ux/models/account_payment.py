@@ -37,7 +37,7 @@ class AccountPayment(models.Model):
         for rec in self:
             wth_amount = sum(self.l10n_ar_withholding_line_ids.mapped('amount'))
             if self.currency_id != self.company_currency_id:
-                wth_amount = wth_amount * self.exchange_rate
+                wth_amount = wth_amount * rec.exchange_rate
             rec.payment_total += wth_amount
 
     # Por ahora no compuamos para no pisar cosas que pueda haber moficiado el usuario. Ademas que ya era así (manual)
